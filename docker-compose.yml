@@ -1,0 +1,89 @@
+services:
+  api:
+    build: .
+    ports: ["127.0.0.1:8000:8000"]
+    environment: &apisentinel-environment
+      APISENTINEL_ENVIRONMENT: ${APISENTINEL_ENVIRONMENT:-development}
+      APISENTINEL_DATABASE_URL: ${APISENTINEL_DATABASE_URL:-sqlite:////data/apisentinel.db}
+      APISENTINEL_ALLOW_ACTIVE_TESTS: ${APISENTINEL_ALLOW_ACTIVE_TESTS:-false}
+      APISENTINEL_COOKIE_SECURE: ${APISENTINEL_COOKIE_SECURE:-false}
+      APISENTINEL_CORS_ORIGINS: ${APISENTINEL_CORS_ORIGINS:-http://127.0.0.1:5173}
+      APISENTINEL_CREDENTIAL_ENCRYPTION_KEY: ${APISENTINEL_CREDENTIAL_ENCRYPTION_KEY:-}
+      APISENTINEL_CREDENTIAL_ENCRYPTION_PROVIDER: ${APISENTINEL_CREDENTIAL_ENCRYPTION_PROVIDER:-fernet}
+      APISENTINEL_CREDENTIAL_KMS_KEY_ID: ${APISENTINEL_CREDENTIAL_KMS_KEY_ID:-}
+      APISENTINEL_CREDENTIAL_KMS_KEY_ID_NEXT: ${APISENTINEL_CREDENTIAL_KMS_KEY_ID_NEXT:-}
+      APISENTINEL_CREDENTIAL_KMS_REGION: ${APISENTINEL_CREDENTIAL_KMS_REGION:-}
+      APISENTINEL_CREDENTIAL_ENCRYPTION_KEY_NEXT: ${APISENTINEL_CREDENTIAL_ENCRYPTION_KEY_NEXT:-}
+      APISENTINEL_RUNNER_EGRESS_ALLOWED_CIDRS: ${APISENTINEL_RUNNER_EGRESS_ALLOWED_CIDRS:-}
+      APISENTINEL_APK_PARSER_URL: http://apk-parser:8090
+    volumes: ["apisentinel-data:/data"]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      apk-parser:
+        condition: service_healthy
+    networks: [default, parser-internal]
+  worker:
+    build: .
+    command: ["apisentinel", "worker", "--worker-id", "compose-worker"]
+    environment: *apisentinel-environment
+    volumes: ["apisentinel-data:/data"]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [default]
+  dashboard:
+    build: ./dashboard
+    ports: ["127.0.0.1:5173:8080"]
+    depends_on: [api]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.5
+  apk-parser:
+    build: ./apk_parser
+    networks:
+      parser-internal:
+        ipv4_address: 172.24.0.2
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 32
+    mem_limit: 192m
+    cpus: 0.5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=2)"]
+      interval: 20s
+      timeout: 3s
+      retries: 3
+networks:
+  parser-internal:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.24.0.0/24
+volumes:
+  apisentinel-data:
