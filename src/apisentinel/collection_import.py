@@ -1,6 +1,6 @@
-"""Bounded passive import of Postman Collection v2.1 request metadata.
+"""Bounded passive imports for Postman, Burp history, and browser HAR metadata.
 
-Request values and bodies are discarded; imports create endpoint inventory only.
+Sensitive request values and bodies are discarded; imports create endpoint inventory only.
 """
 
 from __future__ import annotations
@@ -163,6 +163,67 @@ def postman_to_openapi(document: dict) -> dict:
     operations: dict[tuple[str, str], dict] = {}
     _postman_items(document.get("item"), operations)
     return _to_openapi(operations, "Postman collection")
+
+def burp_to_openapi(document: dict) -> dict:
+    items = document.get("items", document.get("log"))
+    if not isinstance(items, list) or len(items) > MAX_ITEMS:
+        _bad("Burp import requires a bounded items or log array")
+    operations: dict[tuple[str, str], dict] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            _bad("Burp HTTP-history entries must be objects")
+        request = item.get("request", item)
+        if not isinstance(request, dict):
+            _bad("Burp request entry is malformed")
+        url = request.get("url", item.get("url"))
+        method = request.get("method", item.get("method"))
+        if url is None and item.get("host") and item.get("path"):
+            scheme = str(item.get("protocol", "https")).lower()
+            url = f"{scheme}://{item['host']}:{item.get('port', 443)}{item['path']}"
+        headers = request.get("headers", item.get("headers", []))
+        _insert(operations, method, url, headers, bool(request.get("auth")), str(item.get("comment", "")))
+    return _to_openapi(operations, "Burp HTTP history")
+
+def har_to_openapi(document: dict) -> dict:
+    """Import the request metadata subset of HAR 1.2; response bodies are ignored."""
+    log = document.get("log") if isinstance(document, dict) else None
+    entries = log.get("entries") if isinstance(log, dict) else None
+    if not isinstance(entries, list) or len(entries) > MAX_ITEMS:
+        _bad("HAR import requires a bounded log.entries array")
+    operations: dict[tuple[str, str], dict] = {}
+    browser_origins = set()
+    for entry in entries:
+        request = entry.get("request") if isinstance(entry, dict) else None
+        if not isinstance(request, dict):
+            _bad("HAR request entry is malformed")
+        headers = request.get("headers", [])
+        if not isinstance(headers, list) or len(headers) > 200:
+            _bad("HAR request headers exceed the supported limit")
+        _insert(operations, request.get("method"), request.get("url"), headers,
+                False, str(entry.get("pageref", ""))[:200])
+        parsed_origin = entry.get("_initiator", {})
+        if isinstance(parsed_origin, dict):
+            origin = parsed_origin.get("url")
+            if isinstance(origin, str) and operations:
+                try:
+                    parsed_origin = urlsplit(origin)
+                    if (parsed_origin.scheme in {"http", "https"} and parsed_origin.hostname
+                            and parsed_origin.username is None and parsed_origin.password is None):
+                        operation = next(reversed(operations.values()))
+                        host = parsed_origin.hostname.encode("idna").decode("ascii").lower()
+                        if ":" in host:
+                            host = f"[{host}]"
+                        port = parsed_origin.port
+                        default_port = 443 if parsed_origin.scheme == "https" else 80
+                        authority = host if port in {None, default_port} else f"{host}:{port}"
+                        safe_origin = f"{parsed_origin.scheme}://{authority}"[:300]
+                        operation["x-apisentinel-browser-origin"] = safe_origin
+                        browser_origins.add(safe_origin)
+                except (UnicodeError, ValueError):
+                    pass
+    result = _to_openapi(operations, "Browser HAR 1.2")
+    result["info"]["x-apisentinel-browser-origins"] = sorted(browser_origins)[:100]
+    return result
 
 def _to_openapi(operations: dict, title: str) -> dict:
     if not operations:
