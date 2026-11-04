@@ -1,0 +1,11 @@
+# Runner egress policy
+
+APISentinel applies an explicit outbound CIDR allowlist inside the shared HTTP runner. Set `APISENTINEL_RUNNER_EGRESS_ALLOWED_CIDRS` to the approved destination IPv4/IPv6 networks, comma separated. A default route (`0.0.0.0/0` or `::/0`) is rejected. Staging and production refuse to start without a configured list.
+
+For every request and redirect, the runner first applies the assessment's host/path/method scope, resolves the host, rejects prohibited non-global addresses, and requires every DNS answer to match the configured CIDR allowlist. It then connects directly to the validated numeric address and verifies the peer socket. A mixed DNS answer set is rejected if any returned address is outside policy. The same check applies on redirected destinations. Local-loopback test exceptions remain development/lab only and do not bypass production CIDRs.
+
+This control limits the APISentinel HTTP runner. It is an application-layer destination ACL, not a host firewall: the API also needs internal access to the isolated APK parser and, in AWS KMS mode, the AWS KMS endpoint. Production deployments must additionally apply host/cloud firewall or VPC security-group egress rules so a compromised API process cannot remove or bypass its own runner policy. Permit only the configured target CIDRs, required DNS, the private `apk-parser` service network, and the managed KMS endpoint. Keep the database private and do not expose parser ports on the host.
+
+The Compose APK parser attaches only to an `internal: true` network shared with the API service, so it has no route to public or private targets. The API remains on the default Docker network for approved runner traffic. The current local environment has no production target ranges or cloud firewall, so those external network rules have not been exercised here.
+
+Use a PostgreSQL URL for staging/production. Compose exposes API/dashboard host ports on loopback, accepts environment overrides for HTTPS cookie/CORS posture, and requires production config validation to pass before startup. Terminate HTTPS at a trusted reverse proxy bound to the intended interface; firewall the host ports to that proxy and configure the browser origin explicitly.
