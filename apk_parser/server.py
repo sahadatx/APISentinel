@@ -3,12 +3,14 @@ import hashlib
 import http.server
 import io
 import json
+import plistlib
 import re
 import struct
 import sys
 import threading
 import xml.etree.ElementTree as ET
 import zipfile
+from xml.parsers.expat import ExpatError
 
 try:
     from .static_analysis import AndroidManifestStaticAnalysisAdapter
@@ -203,6 +205,67 @@ def _manifest_from_binary(elements):
     return {"application": app_attrs, "components": components, "permissions": permissions}
 
 
+MAX_IPA = 50 * 1024 * 1024
+MAX_IPA_ENTRIES = 50_000
+MAX_IPA_UNCOMPRESSED = 256 * 1024 * 1024
+MAX_INFO_PLIST = 2 * 1024 * 1024
+
+
+def parse_ipa(blob):
+    """Read only a bounded Payload/*.app/Info.plist; never extract or execute IPA content."""
+    if not blob or len(blob) > MAX_IPA:
+        raise ValueError("IPA size is outside allowed limits")
+    with zipfile.ZipFile(io.BytesIO(blob)) as archive:
+        entries = archive.infolist()
+        if len(entries) > MAX_IPA_ENTRIES or sum(item.file_size for item in entries) > MAX_IPA_UNCOMPRESSED:
+            raise ValueError("IPA archive expands beyond parser limits")
+        for item in entries:
+            parts = item.filename.replace("\\", "/").split("/")
+            if item.filename.startswith("/") or ".." in parts:
+                raise ValueError("IPA contains an unsafe archive path")
+        matches = [item for item in entries
+                   if re.fullmatch(r"Payload/[^/]+\.app/Info\.plist", item.filename)]
+        if len(matches) != 1:
+            raise ValueError("IPA must contain exactly one top-level application Info.plist")
+        info = matches[0]
+        if info.file_size > MAX_INFO_PLIST or (info.compress_size == 0 and info.file_size > 0):
+            raise ValueError("iOS Info.plist exceeds parser limits")
+        if info.compress_size and info.file_size / info.compress_size > 100:
+            raise ValueError("iOS Info.plist compression ratio exceeds parser limits")
+        plist_blob = archive.read(info)
+    try:
+        parsed = plistlib.loads(plist_blob)
+    except (plistlib.InvalidFileException, ExpatError, ValueError, TypeError, OverflowError, RecursionError):
+        raise ValueError("iOS Info.plist is malformed") from None
+    if not isinstance(parsed, dict):
+        raise TypeError("iOS Info.plist is not a dictionary")
+    bundle_id = parsed.get("CFBundleIdentifier", "")
+    if not isinstance(bundle_id, str) or not re.fullmatch(r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", bundle_id):
+        raise ValueError("iOS bundle identifier is invalid")
+    def safe_string(key, maximum=200):
+        value = parsed.get(key, "")
+        return value[:maximum] if isinstance(value, str) else ""
+    device_family = parsed.get("UIDeviceFamily", [])
+    if not isinstance(device_family, list) or any(not isinstance(value, int) for value in device_family):
+        device_family = []
+    queries = parsed.get("LSApplicationQueriesSchemes", [])
+    query_count = len(queries) if isinstance(queries, list) else 0
+    return {
+        "bundle_id": bundle_id,
+        "display_name": safe_string("CFBundleDisplayName") or safe_string("CFBundleName"),
+        "version_name": safe_string("CFBundleShortVersionString"),
+        "build_number": safe_string("CFBundleVersion", 40),
+        "minimum_os_version": safe_string("MinimumOSVersion", 40),
+        "metadata": {
+            "info_plist_sha256": hashlib.sha256(plist_blob).hexdigest(),
+            "parser_version": "1",
+            "device_family": device_family[:8],
+            "application_query_scheme_count": min(query_count, 1000),
+            "analysis_scope": "Info.plist metadata only; no executable, entitlements, signature, or runtime inspection",
+            "review_state": "REVIEW_REQUIRED",
+        },
+    }
+
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -216,20 +279,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(b"ok")
 
     def do_POST(self):
-        if self.path != "/parse":
+        if self.path not in {"/parse", "/parse-ipa"}:
             self.send_error(404)
             return
+        is_ipa = self.path == "/parse-ipa"
+        size_limit = MAX_IPA if is_ipa else MAX_APK
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            if length < 1 or length > MAX_APK:
-                raise ValueError("APK size is outside allowed limits")
+            if length < 1 or length > size_limit:
+                raise ValueError("Mobile artifact size is outside allowed limits")
             blob = self.rfile.read(length)
             if len(blob) != length:
-                raise ValueError("Truncated APK upload")
-            result = parse_apk(blob)
+                raise ValueError("Truncated mobile artifact upload")
+            result = parse_ipa(blob) if is_ipa else parse_apk(blob)
             status = 200
         except (ValueError, OSError, IndexError, struct.error, UnicodeError, zipfile.BadZipFile, ET.ParseError, OverflowError):
-            result, status = {"detail": "APK could not be parsed safely"}, 422
+            result, status = {"detail": "Mobile artifact could not be parsed safely"}, 422
         body = json.dumps(result, separators=(",", ":")).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
