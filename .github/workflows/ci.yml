@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: apisentinel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d apisentinel"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      APISENTINEL_ENVIRONMENT: test
+      APISENTINEL_DATABASE_URL: sqlite:////tmp/apisentinel-ci.db
+      APISENTINEL_TEST_POSTGRES_URL: postgresql+psycopg://postgres:postgres@localhost:5432/apisentinel
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - name: Install backend dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Lint and compile backend
+        run: |
+          ruff check src migrations tests
+          python -m compileall -q src migrations tests
+      - name: Run backend tests
+        run: pytest -q
+      - name: Verify clean database migration chain
+        run: |
+          alembic upgrade head
+          alembic check
+      - name: Verify PostgreSQL migrations, multiprocess limits, queue claims, and recovery drill
+        run: |
+          APISENTINEL_DATABASE_URL="$APISENTINEL_TEST_POSTGRES_URL" alembic upgrade head
+          APISENTINEL_DATABASE_URL="$APISENTINEL_TEST_POSTGRES_URL" alembic check
+          createdb --host=localhost --username=postgres --maintenance-db=postgres apisentinel_legacy_width
+          LEGACY_URL=postgresql+psycopg://postgres:postgres@localhost:5432/apisentinel_legacy_width
+          APISENTINEL_DATABASE_URL="$LEGACY_URL" alembic upgrade 0008_retest_execution_provenance
+          psql postgresql://postgres:postgres@localhost:5432/apisentinel_legacy_width -c 'ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(32)'
+          APISENTINEL_DATABASE_URL="$LEGACY_URL" alembic upgrade head
+          APISENTINEL_DATABASE_URL="$LEGACY_URL" alembic check
+          pytest -q tests/test_multiprocess_limits.py::test_postgres_multiprocess_limits_and_restore_can_run_on_disposable_service
+          pytest -q tests/test_job_queue_recovery.py tests/test_request_builder.py
+          createdb --host=localhost --username=postgres --maintenance-db=postgres apisentinel_backup_source
+          BACKUP_SOURCE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/apisentinel_backup_source
+          BACKUP_SOURCE_PG_URL=postgresql://postgres:postgres@localhost:5432/apisentinel_backup_source
+          APISENTINEL_DATABASE_URL="$BACKUP_SOURCE_URL" alembic upgrade head
+          psql "$BACKUP_SOURCE_PG_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO execution_audit_events (event_type, outcome, metadata_json, created_at) VALUES ('OPS_RESTORE_DRILL', 'PASS', '{\"scope\":\"disposable-ci-only\"}', now())"
+          docker run --rm --network host -e PGPASSWORD=postgres -v /tmp:/tmp postgres:16 sh -ec '
+            pg_dump --format=custom --no-owner --dbname=postgresql://postgres:postgres@localhost:5432/apisentinel_backup_source --file=/tmp/apisentinel-ci.dump
+            createdb --host=localhost --username=postgres --maintenance-db=postgres apisentinel_restore
+            pg_restore --exit-on-error --no-owner --dbname=postgresql://postgres:postgres@localhost:5432/apisentinel_restore /tmp/apisentinel-ci.dump
+            test "$(psql postgresql://postgres:postgres@localhost:5432/apisentinel_backup_source -Atc "select version_num from alembic_version")" = "$(psql postgresql://postgres:postgres@localhost:5432/apisentinel_restore -Atc "select version_num from alembic_version")"
+            test "$(psql postgresql://postgres:postgres@localhost:5432/apisentinel_backup_source -Atc "select count(*) from execution_audit_events")" = "1"
+            test "$(psql postgresql://postgres:postgres@localhost:5432/apisentinel_restore -Atc "select count(*) from execution_audit_events")" = "1"
+          '
+      - name: Install dashboard dependencies
+        working-directory: dashboard
+        run: npm ci
+      - name: Build dashboard
+        working-directory: dashboard
+        run: npm run build

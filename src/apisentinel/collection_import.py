@@ -1,14 +1,13 @@
-"""Bounded passive imports for Postman, Burp history, and browser HAR metadata.
+"""Bounded passive imports for Postman, Burp, browser HAR, and Android captures.
 
-Sensitive request values and bodies are discarded; imports create endpoint inventory only.
+Imported request values and bodies are deliberately discarded. The result is an
+OpenAPI-shaped endpoint inventory, and the existing approval/scope gate remains
+the only path to execution.
 """
-
 from __future__ import annotations
 
 import re
-
 from collections.abc import Mapping
-
 from urllib.parse import parse_qsl, urlsplit
 
 from fastapi import HTTPException
@@ -16,13 +15,13 @@ from fastapi import HTTPException
 from .discovery import KNOWN_METHODS, _safe_text, _validate_path
 
 MAX_ITEMS = 2_000
-
 MAX_DEPTH = 32
-
 _SENSITIVE = ("authorization", "proxy-authorization", "cookie", "set-cookie", "api-key", "apikey", "token", "secret", "password")
+
 
 def _bad(message: str):
     raise HTTPException(422, message)
+
 
 def _url(value: object) -> tuple[str, str, list[dict]]:
     if isinstance(value, dict):
@@ -64,6 +63,7 @@ def _url(value: object) -> tuple[str, str, list[dict]]:
                                "schema": {"type": "string"}})
             seen.add(name)
     return f"{parsed.scheme.lower()}://{authority}", path, parameters
+
 
 def _auth_metadata(headers: object, auth_hint: object) -> list[dict]:
     detected: dict[str, dict] = {}
@@ -118,6 +118,7 @@ def _auth_metadata(headers: object, auth_hint: object) -> list[dict]:
                 "definition": {"type": "apiKey", "in": "header", "name": safe_name}}
     return list(detected.values())
 
+
 def _insert(operations: dict, method: object, url: object, headers: object, auth_hint: object, summary: str):
     if not isinstance(method, str):
         _bad("Imported HTTP method must be a string")
@@ -136,6 +137,7 @@ def _insert(operations: dict, method: object, url: object, headers: object, auth
     if auth:
         operation["x-apisentinel-auth-schemes"] = auth
         operation["security"] = [{item["id"]: []} for item in auth]
+
 
 def _postman_items(items: object, operations: dict, depth: int = 0, counter: list[int] | None = None) -> None:
     counter = counter if counter is not None else [0]
@@ -156,6 +158,7 @@ def _postman_items(items: object, operations: dict, depth: int = 0, counter: lis
         _insert(operations, request.get("method", "GET"), request.get("url"), request.get("header"),
                 request.get("auth", {}), "")
 
+
 def postman_to_openapi(document: dict) -> dict:
     info = document.get("info")
     if not isinstance(info, dict) or not str(info.get("schema", "")).endswith("/collection/v2.1.0/collection.json"):
@@ -163,6 +166,7 @@ def postman_to_openapi(document: dict) -> dict:
     operations: dict[tuple[str, str], dict] = {}
     _postman_items(document.get("item"), operations)
     return _to_openapi(operations, "Postman collection")
+
 
 def burp_to_openapi(document: dict) -> dict:
     items = document.get("items", document.get("log"))
@@ -183,6 +187,7 @@ def burp_to_openapi(document: dict) -> dict:
         headers = request.get("headers", item.get("headers", []))
         _insert(operations, method, url, headers, bool(request.get("auth")), str(item.get("comment", "")))
     return _to_openapi(operations, "Burp HTTP history")
+
 
 def har_to_openapi(document: dict) -> dict:
     """Import the request metadata subset of HAR 1.2; response bodies are ignored."""
@@ -224,6 +229,30 @@ def har_to_openapi(document: dict) -> dict:
     result = _to_openapi(operations, "Browser HAR 1.2")
     result["info"]["x-apisentinel-browser-origins"] = sorted(browser_origins)[:100]
     return result
+
+
+def android_capture_to_openapi(document: dict) -> dict:
+    """Import APISentinel's bounded android_http_capture.v1 JSON envelope."""
+    if not isinstance(document, dict) or document.get("format") != "apisentinel.android_http_capture.v1":
+        _bad("Android traffic must use apisentinel.android_http_capture.v1")
+    package = document.get("package_name", "")
+    version = document.get("version_name", "")
+    if (not isinstance(package, str) or len(package) > 255
+            or not isinstance(version, str) or len(version) > 100):
+        _bad("Android app attribution is malformed")
+    requests = document.get("requests")
+    if not isinstance(requests, list) or len(requests) > MAX_ITEMS:
+        _bad("Android capture requires a bounded requests array")
+    operations: dict[tuple[str, str], dict] = {}
+    for item in requests:
+        if not isinstance(item, dict):
+            _bad("Android traffic request is malformed")
+        _insert(operations, item.get("method"), item.get("url"), item.get("headers", []),
+                item.get("auth_scheme", ""), "Android observed traffic")
+    result = _to_openapi(operations, "Android observed HTTP traffic")
+    result["info"]["x-apisentinel-app"] = {"package_name": package, "version_name": version}
+    return result
+
 
 def _to_openapi(operations: dict, title: str) -> dict:
     if not operations:

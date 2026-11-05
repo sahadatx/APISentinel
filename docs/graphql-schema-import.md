@@ -1,0 +1,7 @@
+# GraphQL schema import
+
+APISentinel accepts a GraphQL introspection JSON export supplied by the client. In the Discovery import dialog choose **GraphQL schema · introspection JSON** and upload or paste the JSON export. The accepted input is either the usual `{ "data": { "__schema": ... } }` response or an object containing `__schema` directly.
+
+The importer is offline and bounded by the configured import-size limit, a 2,000-type limit, a 10,000-field limit, and parser nesting limits. It stores the schema content hash and a sanitized inventory of named types, fields, argument types, interface/union relationships, enum values, and query/mutation/subscription roots. It discards raw introspection JSON, descriptions, and default values. It does not fetch a remote schema, execute scripts, or send any GraphQL operation to a target. Imported schema metadata does not establish authorization or security coverage.
+
+The Discovery page displays the latest imported schema and operation roots. New report snapshots include the latest schema counts and root operation names. To assess the schema's security, the analyst must separately perform authorized manual review, save evidence-backed checklist results, and record validated findings. APISentinel does not currently test GraphQL object/function authorization, excessive data exposure, batching, depth/complexity limits, injection, or rate-limit behavior.
