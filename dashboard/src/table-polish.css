@@ -1,0 +1,247 @@
+/* Table presentation is shared; each page retains its column and mobile layout. */
+.app {
+  --table-heading: #96aebb;
+  --table-text: #c3d3dc;
+  --table-primary: #e0ebef;
+  --table-secondary: #8fa6b3;
+  --table-border: #283c49;
+  --table-hover: #172d38;
+  --status-ink: #b6c9d3;
+  --status-line: #38505e;
+  --status-fill: #1b2c37;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) {
+  color: var(--table-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) thead th {
+  padding-block: 13px;
+  border-bottom: 1px solid #304653;
+  background: linear-gradient(180deg, #142530, #101f29);
+  color: var(--table-heading);
+  font: 600 8.5px/1.5 var(--mono);
+  letter-spacing: .075em;
+  text-align: left;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr {
+  transition: background-color .16s ease, box-shadow .16s ease;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr > td {
+  min-width: 0;
+  border-top-color: var(--table-border);
+  color: var(--table-text);
+  font-size: 10.5px;
+  line-height: 1.6;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr:hover {
+  background-color: var(--table-hover);
+  box-shadow: inset 2px 0 #51a99f;
+}
+
+.app .main .assessment-table tbody > tr.selected {
+  background: linear-gradient(90deg, #183a39, #152c34 52%, #142730);
+  box-shadow: inset 3px 0 #6bd4c4;
+}
+
+.app :is(.client-workspace-cell, .finding-cell, .report-name-cell, .report-client-cell, .retesting-finding-cell, .test-history-check, .test-history-endpoint) b,
+.app .assessment-name-line > b,
+.app .discovery-assessment-cell > b,
+.app .coverage-results-panel .coverage-check-cell > b,
+.app .table-cell-primary {
+  color: var(--table-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: -.01em;
+}
+
+.app :is(.client-engagement-cell, .finding-cell, .report-name-cell, .report-client-cell, .report-findings-cell, .retesting-finding-cell, .retesting-check-cell, .test-history-check, .test-history-endpoint) small,
+.app .discovery-assessment-cell > small,
+.app .discovery-table td:nth-child(2) > small,
+.app .assessment-table .muted,
+.app .table-cell-secondary {
+  color: var(--table-secondary);
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.app :is(.report-name-cell, .report-client-cell, .report-findings-cell, .test-history-check, .test-history-endpoint, .retesting-finding-cell, .retesting-check-cell) {
+  gap: 5px;
+}
+
+.app .report-findings-cell > b {
+  color: #dce8ec;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.app :is(.table-date, .client-last-activity),
+.app .assessment-table td:nth-child(6),
+.app .reports-table td:nth-child(5),
+.app .test-history-table td:nth-child(6),
+.app .discovery-table td > time {
+  color: #b3c6d0;
+  font-size: 9.5px;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+
+.app .table-datetime {
+  display: inline-flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.app .table-datetime > span,
+.app .table-datetime > small,
+.app .audit-time-cell > span {
+  color: #859fab;
+  font-size: 8.5px;
+}
+
+.app .audit-time-cell > time {
+  color: #c8d9e0;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.app .audit-scope-cell {
+  gap: 4px;
+  color: #94aebb;
+  font-size: 9px;
+}
+
+.app .audit-scope-cell b { color: #c3d4dc; font-weight: 500; }
+.app .audit-actor { color: #adbfca; font-size: 9.5px; }
+
+.app .main :is(.discovery-table, .findings-table, .retesting-table) td code,
+.app .table-identifier {
+  max-width: 100%;
+  color: #b1cbd5;
+  font: 400 9px/1.65 var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.app .discovery-inventory-card .discovery-endpoint-link code {
+  color: #d3e5ea;
+  font-size: 10px;
+  font-weight: 400;
+  background: none;
+  box-shadow: none;
+}
+
+.app .discovery-inventory-card .discovery-endpoint-link:hover code { color: #99e1d7; }
+.app .coverage-results-panel .coverage-endpoint-main code { color: #d3e5e9; }
+.app .coverage-results-panel .coverage-run-reference { color: #8ea9b7; }
+.app .coverage-results-panel .coverage-check-id { color: #8ba4b2; }
+.app .test-history-check > small { color: #8da7b5; font-size: 8px; }
+.app .test-history-endpoint > code { color: #adc6d1; font-size: 9px; }
+.app .test-history-endpoint > code > span { color: #82d5c8; }
+.app .retesting-check-cell code { background: none; padding: 0; }
+
+/* Status colors express state consistently across the workflow. */
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) .badge {
+  --status-ink: #b6c9d3;
+  --status-line: #38505e;
+  --status-fill: #1b2c37;
+  display: inline-flex;
+  max-width: 100%;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 1px solid var(--status-line);
+  border-radius: 6px;
+  background: var(--status-fill);
+  color: var(--status-ink);
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: .005em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  box-shadow: inset 0 1px #ffffff04;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.active, .badge.approved, .badge.in-scope, .badge.pass, .badge.passed, .badge.no-issue-observed, .badge.completed, .badge.validated, .badge.confirmed, .badge.resolved, .badge.verified-fixed, .badge.updated, .badge.manually-resolved) {
+  --status-ink: #a0dfc9;
+  --status-line: #356256;
+  --status-fill: #19392f;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.needs-review, .badge.pending-validation, .badge.review-required, .badge.recorded, .badge.candidate, .badge.candidate-found, .badge.fail, .badge.inconclusive, .badge.blocked, .badge.blocked-scope, .badge.blocked-destination, .badge.auth-unavailable, .badge.timeout, .badge.open, .badge.reopened, .badge.retest-required, .badge.ready-for-retest, .badge.fixed-pending-verification) {
+  --status-ink: #e7c58b;
+  --status-line: #6a5636;
+  --status-fill: #342c20;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.error, .badge.failed, .badge.transport-error, .badge.execution-error, .badge.critical, .badge.high, .badge.not-resolved, .badge.confirmed-persistence, .badge.revoked, .badge.expired) {
+  --status-ink: #efafb7;
+  --status-line: #72454f;
+  --status-fill: #3a252e;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.running, .badge.queued, .badge.requested, .badge.in-progress, .badge.remediation-in-progress, .badge.scheduled, .badge.web-api, .badge.low, .badge.p3, .badge.p4) {
+  --status-ink: #a5ccef;
+  --status-line: #385d7a;
+  --status-fill: #1c3245;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.medium, .badge.p2, .badge.partially-resolved) {
+  --status-ink: #e7c58b;
+  --status-line: #6a5636;
+  --status-fill: #342c20;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.both, .badge.accepted-risk, .badge.retested, .badge.fixed) {
+  --status-ink: #c7b9ea;
+  --status-line: #544b74;
+  --status-fill: #2b2941;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.android-api) {
+  --status-ink: #a0d7bc;
+  --status-line: #365d4c;
+  --status-fill: #1b332b;
+}
+
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) :is(.badge.critical, .badge.p1) {
+  --status-ink: #f4b5c3;
+  --status-line: #8a485d;
+  --status-fill: #472736;
+}
+
+.app .finding-risk-badges,
+.app .retesting-risk-cell { gap: 5px; }
+.app .finding-risk-badges .badge,
+.app .retesting-risk-cell .badge { justify-content: center; }
+.app .finding-confidence { margin-top: 5px; color: #91a7b4; font-size: 8.5px; line-height: 1.5; }
+.app .audit-event-name { border-radius: 5px; font-size: 8px; line-height: 1.6; }
+
+/* Keep mobile card labels intact; only refine their visual hierarchy. */
+@media (min-width: 1001px) {
+  .app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr > td { padding-block: 17px; }
+  .app .main .reports-table tbody > tr > td { padding-block: 18px; }
+  .app .main .audit-events-table tbody > tr > td { padding-block: 15px; }
+}
+
+@media (max-width: 1000px) {
+  .app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr > td { font-size: 10px; }
+  .app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr > td::before { color: #91aab8; font-size: 7.5px; line-height: 1.5; }
+  .app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr:hover { box-shadow: inset 2px 0 #51a99f; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody > tr { transition: none; }
+}

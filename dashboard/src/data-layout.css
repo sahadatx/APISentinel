@@ -1,0 +1,108 @@
+/* Final data presentation layer shared by every workspace page. */
+.app .main { --data-accent: #78d8cb; }
+.app .page-head h1 { color: #edf5f7; font-weight: 750; letter-spacing: -.9px; }
+.app .page-head p { color: #9bb0bc; line-height: 1.65; }
+.app .crumb { color: #7e9da9; letter-spacing: .12em; }
+.app .panel-head h2,
+.app :is(.client-directory-heading, .retesting-list-heading, .coverage-table-heading, .test-history-heading, .audit-history-heading) h2 {
+  color: #e1edf1;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -.3px;
+}
+.app .panel-head p,
+.app :is(.client-directory-heading, .retesting-list-heading, .coverage-table-heading) p { color: #91aab7; line-height: 1.65; }
+.app .panel-head > a { color: #87d9ce; font-weight: 600; }
+.app .panel-head > a:hover { color: #b5f1e8; }
+.app .kpi-grid > .kpi > strong,
+.app :is(.finding-metric, .retesting-metric) > b { font-feature-settings: 'tnum'; }
+.app .metric-ratio { display: inline-flex; align-items: baseline; gap: 3px; }
+.app .metric-ratio-total { color: #9cb5c3; font-size: .63em; font-weight: 600; letter-spacing: -.3px; }
+.app .metric-ratio-total i { padding-right: 4px; color: #668391; font-style: normal; font-weight: 400; }
+.app .retesting-metric-heading { display: flex; grid-column: 1 / -1; grid-row: 1; align-items: flex-start; justify-content: space-between; gap: 12px; min-width: 0; }
+.app .main .badge.p0 { --status-ink: #f4b5c3; --status-line: #8a485d; --status-fill: #472736; }
+.app :is(.client-directory-total, .retesting-queue-count) { border-color: #304a57; }
+.app :is(.client-directory-total, .retesting-queue-count) > b { color: #a4e5dd; font-variant-numeric: tabular-nums; }
+.app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) thead th {
+  color: #adc4cf;
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .015em;
+  line-height: 1.5;
+  text-transform: none;
+}
+.app .main th[scope="col"] { white-space: normal; }
+.app .table-date { display: inline-block; max-width: 100%; white-space: normal; overflow-wrap: normal; font-variant-numeric: tabular-nums; }
+.app :is(.client-pagination, .coverage-pagination, .audit-pagination) { font-variant-numeric: tabular-nums; }
+.app .dashboard-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(140px, 160px));
+  align-items: end;
+  gap: 16px;
+  padding: 18px;
+  background: linear-gradient(110deg, #142832, #10202b);
+  border-color: #2b434f;
+}
+.app .dashboard-range > div:first-child { margin: 0; min-width: 0; }
+.app .dashboard-range > div:first-child b { color: #dcebef; font: 650 11px/1.5 var(--display); }
+.app .dashboard-range > div:first-child small { color: #8faab8; font-size: 9.5px; line-height: 1.6; }
+.app .dashboard-range label { min-width: 0; color: #a5bdc8; font-size: 10px; font-weight: 500; }
+.app .dashboard-range input { width: 100%; min-width: 0; min-height: 38px; border-radius: 7px; border-color: #344f5d; background: #0d1d27; }
+.app .dashboard-range :is(.dashboard-range-footer, .dashboard-range-error) { grid-column: 1 / -1; }
+.app .dashboard-states > div { border-color: #29404c; border-radius: 8px; background: #10232e; padding: 11px 12px; }
+.app .dashboard-states span { color: #9eb5c1; line-height: 1.5; }
+.app .dashboard-states b { color: #aadfd8; font-family: var(--display); font-size: 13px; font-variant-numeric: tabular-nums; }
+.app .severity-row > b { color: #d5e6ec; font-variant-numeric: tabular-nums; }
+.app .activity-main > b { color: #dbe8ed; font-weight: 600; line-height: 1.55; }
+.app .activity-main > span { color: #8fa9b6; line-height: 1.6; }
+@media (max-width: 1120px) {
+  .app .reports-table-card .reports-table tbody tr { height: auto; min-height: 0; overflow: visible; }
+  .app .reports-table-card .report-client-cell > :is(b, small) { white-space: normal; overflow: visible; text-overflow: clip; }
+  .app .reports-table-card .reports-table td:nth-child(4), .app .reports-table-card .reports-table td:nth-child(5) { text-align: left; white-space: normal; }
+  .app .reports-filter-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) {
+  .app .dashboard-range { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .app .dashboard-range > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 1000px) {
+  .app .main :is(.client-directory-table, .assessment-table, .discovery-table, .findings-table, .reports-table, .test-history-table, .retesting-table, .audit-events-table, .coverage-results-table) tbody td::before { font: 600 9px/1.5 var(--display); letter-spacing: .025em; }
+  .app .findings-filter-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .app .findings-filter-search { grid-column: auto; }
+  .app :is(.client-directory-table, .assessment-table) { display: block; width: 100%; min-width: 0; }
+  .app :is(.client-directory-table, .assessment-table) :is(thead, colgroup) { display: none; }
+  .app :is(.client-directory-table, .assessment-table) tbody { display: grid; gap: 12px; padding: 12px; }
+  .app :is(.client-directory-table, .assessment-table) tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; min-width: 0; height: auto; overflow: visible; border: 1px solid #304956; border-radius: 10px; background: #142630; }
+  .app :is(.client-directory-table, .assessment-table) tbody td { display: block; width: auto; min-width: 0; padding: 12px; border-top: 1px solid #2b414c; white-space: normal; overflow-wrap: anywhere; }
+  .app :is(.client-directory-table, .assessment-table) tbody td:first-child { grid-column: 1 / -1; border-top: 0; }
+  .app :is(.client-directory-table, .assessment-table) tbody td:last-child { grid-column: 1 / -1; }
+  .app :is(.client-directory-table, .assessment-table) tbody td::before { display: block; margin-bottom: 7px; color: #91aebb; font: 600 9px/1.5 var(--display); letter-spacing: .02em; }
+  .app .client-directory-table td:nth-child(2)::before { content: 'Sector'; }
+  .app .client-directory-table td:nth-child(3)::before { content: 'Engagement'; }
+  .app .client-directory-table td:nth-child(4)::before { content: 'Open items'; }
+  .app .client-directory-table td:nth-child(5)::before { content: 'Last activity'; }
+  .app .client-directory-table td:nth-child(6)::before { content: 'Actions'; }
+  .app .assessment-table td:nth-child(2)::before { content: 'Client'; }
+  .app .assessment-table td:nth-child(3)::before { content: 'Type'; }
+  .app .assessment-table td:nth-child(4)::before { content: 'Environment'; }
+  .app .assessment-table td:nth-child(5)::before { content: 'Authorization'; }
+  .app .assessment-table td:nth-child(6)::before { content: 'Updated'; }
+  .app .assessment-table td:nth-child(7)::before { content: 'Actions'; }
+  .app .client-table-scroll:has(> .client-directory-table), .app .assessment-table-scroll { overflow-x: visible; }
+  .app .client-workspace-cell { min-width: 0; flex-wrap: wrap; }
+  .app .client-workspace-cell > div:last-child { min-width: 0; }
+}
+@media (max-width: 600px) {
+  .app .page-head h1 { font-size: 27px; }
+  .app .dashboard-range { padding: 15px; }
+  .app .findings-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app .panel-head h2,
+  .app :is(.client-directory-heading, .retesting-list-heading, .coverage-table-heading, .test-history-heading, .audit-history-heading) h2 { font-size: 15px; }
+}
+@media (max-width: 420px) {
+  .app .findings-filter-bar { grid-template-columns: minmax(0, 1fr); }
+  .app .reports-filter-fields { grid-template-columns: minmax(0, 1fr); }
+}
