@@ -40,7 +40,7 @@ APISentinel is a self-hostable workspace for organizing authorized API assessmen
 
 - [Overview](#overview)
 - [Project demo](#project-demo)
-- [Workspace preview](#workspace-preview)
+- [Workspace screenshots](#workspace-screenshots)
 - [Capabilities](#capabilities)
 - Assessment design
   - [Architecture](#architecture)
@@ -74,15 +74,17 @@ Click the thumbnail to watch an APISentinel walkthrough using fictional lab reco
   </a>
 </p>
 
-<a id="workspace-preview"></a>
+<a id="workspace-screenshots"></a>
 
-## 📸 Workspace Preview
+## 📸 Workspace Screenshots
 
-These fictional lab screens show the main assessment views; they contain no client data.
+Six fictional lab screens show the workflow from overview and setup through inventory, findings, and report delivery. They contain no client data.
 
 | Overview | API inventory |
 |:---:|:---:|
 | <img src="images/01-overview.png" alt="APISentinel overview" width="100%"> | <img src="images/02-api-inventory.png" alt="API endpoint inventory" width="100%"> |
+| Client setup | Scope review |
+| <img src="images/05-client-setup.jpg" alt="Create a client workspace" width="100%"> | <img src="images/06-scope-review.jpg" alt="Review authorized assessment scope" width="100%"> |
 | Findings review | Report delivery |
 | <img src="images/03-findings-review.png" alt="Analyst findings review" width="100%"> | <img src="images/05-report.png" alt="Versioned report delivery" width="100%"> |
 
@@ -350,7 +352,7 @@ APISentinel/
 ├── apk_parser/                Isolated mobile metadata parser
 ├── migrations/                Alembic migrations
 ├── tests/                     Backend and browser tests
-├── images/                    Banner, preview, and demo video
+├── images/                    Banner, six workspace screenshots, demo thumbnail, and video
 └── docker-compose.yml         Local multi-service setup
 ```
 
