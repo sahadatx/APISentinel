@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="#quick-start"><img src="https://img.shields.io/badge/Quick%20Start-Get%20Started-2563EB?style=for-the-badge" alt="Quick start"></a>
-  <a href="#product-demo"><img src="https://img.shields.io/badge/Demo-Watch-0891B2?style=for-the-badge" alt="Product demo"></a>
+  <a href="#project-demo"><img src="https://img.shields.io/badge/Demo-Watch-0891B2?style=for-the-badge" alt="Project demo"></a>
   <a href="#safe-use"><img src="https://img.shields.io/badge/Safe%20Use-Read%20Scope-0F766E?style=for-the-badge" alt="Safe use"></a>
   <a href="https://github.com/sahadatx/APISentinel/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/sahadatx/APISentinel/ci.yml?branch=main&label=CI" alt="GitHub Actions CI status"></a>
 </p>
@@ -39,7 +39,7 @@ APISentinel is a self-hostable workspace for organizing authorized API assessmen
 ## 📑 Contents
 
 - [Overview](#overview)
-- [Product demo](#product-demo)
+- [Project demo](#project-demo)
 - [Workspace preview](#workspace-preview)
 - [Capabilities](#capabilities)
 - Assessment design
@@ -62,15 +62,15 @@ APISentinel is a self-hostable workspace for organizing authorized API assessmen
   - [Contributing](#contributing)
   - [Author](#author)
 
-<a id="product-demo"></a>
+<a id="project-demo"></a>
 
-## 🎥 Product Demo
+## 🎥 Project Demo
 
-Click the thumbnail to watch a 70-second walkthrough of the workspace using fictional lab records.
+Click the thumbnail to watch an APISentinel walkthrough using fictional lab records.
 
 <p align="center">
   <a href="https://github.com/user-attachments/assets/5862fe3a-323a-420f-a0e1-43c13244927a">
-    <img src="images/demo-thumbnail.png" alt="Play the APISentinel 70-second product demo" width="100%">
+    <img src="images/demo-thumbnail.png" alt="Play the APISentinel project demo" width="100%">
   </a>
 </p>
 
