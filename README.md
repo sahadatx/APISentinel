@@ -68,9 +68,9 @@ APISentinel is a self-hostable workspace for organizing authorized API assessmen
 
 Watch a 70-second walkthrough of the workspace using fictional lab records.
 
-<p align="center"><a href="images/Video.mp4"><img src="images/video-poster.jpg" alt="Play the APISentinel product walkthrough video" width="100%"></a></p>
+<p align="center"><a href="https://raw.githubusercontent.com/sahadatx/APISentinel/main/images/Video.mp4"><img src="images/video-poster.jpg" alt="Download the APISentinel product walkthrough video" width="100%"></a></p>
 
-<p align="center"><strong>▶ Select the preview to open the video</strong></p>
+<p align="center"><strong>▶ Select the preview to download the MP4</strong></p>
 
 <a id="workspace-preview"></a>
 
